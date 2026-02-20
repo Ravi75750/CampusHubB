@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
-export const verifyToken = (req, res, next) => {
+export const verifyToken = async (req, res, next) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -9,6 +10,13 @@ export const verifyToken = (req, res, next) => {
         }
 
         const verified = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Check if user is banned
+        const user = await User.findById(verified.id);
+        if (user && user.isBanned) {
+            return res.status(403).json({ message: "USER_BANNED" });
+        }
+
         req.user = verified; // { id, role }
         next();
     } catch (error) {

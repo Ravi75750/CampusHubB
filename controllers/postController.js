@@ -211,3 +211,62 @@ export async function getPostById(req, res) {
         res.status(500).json({ message: error.message });
     }
 }
+
+export async function deleteComment(req, res) {
+    try {
+        const { id, commentId } = req.params;
+        const post = await Post.findById(id);
+        if (!post) return res.status(404).json({ message: "Post not found" });
+
+        const comment = post.comments.id(commentId);
+        if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+        // Check ownership or Admin role
+        if (comment.author.toString() !== req.user.id && req.user.role !== 'Admin') {
+            return res.status(401).json({ message: "User not authorized" });
+        }
+
+        comment.deleteOne();
+        await post.save();
+
+        const updatedPost = await Post.findById(id)
+            .populate('author', 'name username avatar role')
+            .populate('comments.author', 'name username avatar role')
+            .populate('comments.replies.author', 'name username avatar role');
+
+        res.status(200).json(updatedPost);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+export async function deleteReply(req, res) {
+    try {
+        const { id, commentId, replyId } = req.params;
+        const post = await Post.findById(id);
+        if (!post) return res.status(404).json({ message: "Post not found" });
+
+        const comment = post.comments.id(commentId);
+        if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+        const reply = comment.replies.id(replyId);
+        if (!reply) return res.status(404).json({ message: "Reply not found" });
+
+        // Check ownership or Admin role
+        if (reply.author.toString() !== req.user.id && req.user.role !== 'Admin') {
+            return res.status(401).json({ message: "User not authorized" });
+        }
+
+        reply.deleteOne();
+        await post.save();
+
+        const updatedPost = await Post.findById(id)
+            .populate('author', 'name username avatar role')
+            .populate('comments.author', 'name username avatar role')
+            .populate('comments.replies.author', 'name username avatar role');
+
+        res.status(200).json(updatedPost);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}

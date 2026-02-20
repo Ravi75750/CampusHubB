@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import { createPost, getPosts, getPostById, deletePost, editPost, addComment, likePost, getPostCountByUser, getPostsByUser, replyToComment } from '../controllers/postController.js';
+import { createPost, getPosts, getPostById, deletePost, editPost, addComment, likePost, getPostCountByUser, getPostsByUser, replyToComment, deleteComment, deleteReply } from '../controllers/postController.js';
 
 import { verifyToken } from '../middleware/authMiddleware.js';
 import moderationMiddleware from '../middleware/moderation.js';
@@ -21,5 +21,7 @@ router.get('/count/:userId', verifyToken, getPostCountByUser);
 router.get('/user/:userId', verifyToken, getPostsByUser);
 
 router.post('/:id/comments/:commentId/reply', verifyToken, moderationMiddleware, replyToComment);
+router.delete('/:id/comments/:commentId', verifyToken, deleteComment);
+router.delete('/:id/comments/:commentId/replies/:replyId', verifyToken, deleteReply);
 
 export default router;
