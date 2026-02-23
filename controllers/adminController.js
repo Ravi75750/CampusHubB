@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Post from '../models/Post.js';
 import Notice from '../models/Notice.js';
+import Report from '../models/Report.js'; // Added Report model
 import bcrypt from 'bcryptjs';
 import OTP from '../models/OTP.js';
 import jwt from 'jsonwebtoken';
@@ -190,10 +191,29 @@ export async function updateUser(req, res) {
 
 export async function getReports(req, res) {
     try {
-        const reportedPosts = await Post.find({ 'reports.0': { $exists: true } }).populate('reports.reporterId', 'name');
-        const reportedUsers = await User.find({ 'reportsReceived.0': { $exists: true } }).populate('reportsReceived.reporterId', 'name');
+        // Legacy reports (nested in Post/User models)
+        const reportedPosts = await Post.find({ 'reports.0': { $exists: true } }).populate('reports.reporterId', 'name role');
+        const reportedUsers = await User.find({ 'reportsReceived.0': { $exists: true } }).populate('reportsReceived.reporterId', 'name role');
 
-        res.status(200).json({ posts: reportedPosts, users: reportedUsers });
+        // Categorized reports from the Report model
+        const teacherComplaints = await Report.find({ status: 'Pending' })
+            .populate('reporter', 'name email role')
+            .populate('reportedPost')
+            .populate('reportedUser', 'name email')
+            .then(reports => reports.filter(r => r.reporter?.role === 'Teacher'));
+
+        const studentComplaints = await Report.find({ status: 'Pending' })
+            .populate('reporter', 'name email role')
+            .populate('reportedPost')
+            .populate('reportedUser', 'name email')
+            .then(reports => reports.filter(r => r.reporter?.role === 'Student'));
+
+        res.status(200).json({
+            posts: reportedPosts,
+            users: reportedUsers,
+            teacherComplaints,
+            studentComplaints
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -233,6 +253,26 @@ export async function deleteNotice(req, res) {
     try {
         await Notice.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "Notice deleted" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+export async function getArchivedPosts(req, res) {
+    try {
+        const posts = await Post.find({ isArchived: true }).populate('author', 'name email');
+        res.status(200).json(posts);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+export async function restorePost(req, res) {
+    try {
+        const { id } = req.params;
+        const post = await Post.findByIdAndUpdate(id, { isArchived: false }, { new: true });
+        if (!post) return res.status(404).json({ message: "Post not found" });
+        res.status(200).json({ message: "Post restored", post });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
