@@ -4,6 +4,7 @@ const postSchema = new mongoose.Schema({
     content: { type: String, required: true },
     image: { type: String }, // URL or Base64
     text: { type: String, required: true },
+    visibility: { type: String, enum: ['Anyone', 'Friends Only'], default: 'Anyone' },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     isArchived: { type: Boolean, default: false },
     items: { type: [String] }, // Tags or related items

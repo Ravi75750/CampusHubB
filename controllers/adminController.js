@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Post from '../models/Post.js';
 import Notice from '../models/Notice.js';
 import Report from '../models/Report.js'; // Added Report model
+import SiteSettings from '../models/SiteSettings.js';
 import bcrypt from 'bcryptjs';
 import OTP from '../models/OTP.js';
 import jwt from 'jsonwebtoken';
@@ -273,6 +274,27 @@ export async function restorePost(req, res) {
         const post = await Post.findByIdAndUpdate(id, { isArchived: false }, { new: true });
         if (!post) return res.status(404).json({ message: "Post not found" });
         res.status(200).json({ message: "Post restored", post });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// --- Site Settings ---
+
+export async function updateSiteSettings(req, res) {
+    try {
+        let settings = await SiteSettings.findOne();
+        if (!settings) {
+            settings = new SiteSettings();
+        }
+
+        if (req.file) {
+            // Cloudinary URL from multer-storage-cloudinary
+            settings.landingPageImage = req.file.path;
+        }
+
+        await settings.save();
+        res.status(200).json({ message: "Site settings updated", settings });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

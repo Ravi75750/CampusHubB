@@ -10,6 +10,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import moderationRoutes from './routes/moderationRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import socialRoutes from './routes/socialRoutes.js';
+import publicRoutes from './routes/publicRoutes.js';
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/moderation', moderationRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/social', socialRoutes);
+app.use('/api/public', publicRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

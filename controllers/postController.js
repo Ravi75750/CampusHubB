@@ -1,9 +1,10 @@
 import Post from '../models/Post.js';
 import Notification from '../models/Notification.js';
+import ConnectionRequest from '../models/ConnectionRequest.js';
 
 export async function createPost(req, res) {
     try {
-        const { text } = req.body;
+        const { text, visibility } = req.body;
         let image = req.body.image; // Keep if user sends URL manually
 
         if (req.file) {
@@ -14,6 +15,7 @@ export async function createPost(req, res) {
             text,
             content: text,
             image,
+            visibility: visibility || 'Anyone',
             author: req.user.id
         });
 
@@ -64,7 +66,26 @@ export async function editPost(req, res) {
 
 export async function getPosts(req, res) {
     try {
-        const posts = await Post.find({ isArchived: { $ne: true } })
+        let visibilityFilter = { isArchived: { $ne: true } };
+
+        if (req.user.role !== 'Admin') {
+            const connections = await ConnectionRequest.find({
+                $or: [{ sender: req.user.id }, { receiver: req.user.id }],
+                status: 'accepted'
+            });
+            const friendIds = connections.map(c => 
+                c.sender.toString() === req.user.id ? c.receiver.toString() : c.sender.toString()
+            );
+            friendIds.push(req.user.id);
+
+            visibilityFilter.$or = [
+                { visibility: 'Anyone' },
+                { visibility: { $exists: false } },
+                { visibility: 'Friends Only', author: { $in: friendIds } }
+            ];
+        }
+
+        const posts = await Post.find(visibilityFilter)
             .populate('author', 'name username avatar role')
             .populate('comments.author', 'name username avatar role')
             .populate('comments.replies.author', 'name username avatar role')
@@ -178,7 +199,25 @@ export async function replyToComment(req, res) {
 
 export async function getPostsByUser(req, res) {
     try {
-        const posts = await Post.find({ author: req.params.userId })
+        let filter = { author: req.params.userId };
+
+        if (req.user.role !== 'Admin' && req.user.id !== req.params.userId) {
+            const connections = await ConnectionRequest.find({
+                $or: [{ sender: req.user.id }, { receiver: req.user.id }],
+                status: 'accepted'
+            });
+            const friendIds = connections.map(c => 
+                c.sender.toString() === req.user.id ? c.receiver.toString() : c.sender.toString()
+            );
+
+            filter.$or = [
+                { visibility: 'Anyone' },
+                { visibility: { $exists: false } },
+                { visibility: 'Friends Only', author: { $in: friendIds } }
+            ];
+        }
+
+        const posts = await Post.find(filter)
             .populate('author', 'name username avatar role')
             .populate('comments.author', 'name username avatar role')
             .populate('comments.replies.author', 'name username avatar role')
