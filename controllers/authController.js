@@ -50,11 +50,36 @@ export async function registerStep1(req, res) {
 
         try {
             if (process.env.NODEMAILER_USER && process.env.NODEMAILER_PASS) {
+                const emailHtml = `
+                <div style="background-color: #f4f6f8; padding: 40px 20px; font-family: Arial, sans-serif;">
+                    <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h2 style="margin: 0; color: #333; font-style: italic; font-size: 28px; font-weight: bold;">CampusHub</h2>
+                        </div>
+                        <h1 style="color: #4285F4; text-align: center; margin-bottom: 20px; font-size: 28px;">Email OTP</h1>
+                        <hr style="border: none; border-top: 1px solid #eaeaea; margin: 20px 0;" />
+                        <p style="font-size: 16px; color: #333; margin-bottom: 10px;">Dear User,</p>
+                        <p style="font-size: 16px; color: #333; margin-bottom: 20px;">Your One-Time Password (OTP) is:</p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <span style="font-size: 40px; font-weight: bold; color: #34A853; letter-spacing: 4px;">${otpCode}</span>
+                        </div>
+                        <p style="font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 10px;">
+                            Please use this OTP to complete your registration process. Do not share this code with anyone.
+                        </p>
+                        <p style="font-size: 14px; color: #555; margin-bottom: 30px;">
+                            Thank you for using CampusHub!
+                        </p>
+                        <p style="text-align: center; font-size: 12px; color: #999; margin-top: 20px;">
+                            &copy; CampusHub. All rights reserved.
+                        </p>
+                    </div>
+                </div>`;
+
                 await transporter.sendMail({
                     from: process.env.NODEMAILER_USER,
                     to: email,
                     subject: 'CampusConnect Registration OTP',
-                    text: `Your Registration OTP is: ${otpCode}. It expires in 5 minutes.`
+                    html: emailHtml
                 });
             }
         } catch (emailErr) {
@@ -149,11 +174,36 @@ export async function loginStep1(req, res) {
 
         try {
             if (process.env.NODEMAILER_USER && process.env.NODEMAILER_PASS) {
+                const emailHtml = `
+                <div style="background-color: #f4f6f8; padding: 40px 20px; font-family: Arial, sans-serif;">
+                    <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h2 style="margin: 0; color: #333; font-style: italic; font-size: 28px; font-weight: bold;">CampusHub</h2>
+                        </div>
+                        <h1 style="color: #4285F4; text-align: center; margin-bottom: 20px; font-size: 28px;">Email OTP</h1>
+                        <hr style="border: none; border-top: 1px solid #eaeaea; margin: 20px 0;" />
+                        <p style="font-size: 16px; color: #333; margin-bottom: 10px;">Dear User,</p>
+                        <p style="font-size: 16px; color: #333; margin-bottom: 20px;">Your One-Time Password (OTP) is:</p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <span style="font-size: 40px; font-weight: bold; color: #34A853; letter-spacing: 4px;">${otpCode}</span>
+                        </div>
+                        <p style="font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 10px;">
+                            Please use this OTP to complete your login process. Do not share this code with anyone.
+                        </p>
+                        <p style="font-size: 14px; color: #555; margin-bottom: 30px;">
+                            Thank you for using CampusHub!
+                        </p>
+                        <p style="text-align: center; font-size: 12px; color: #999; margin-top: 20px;">
+                            &copy; CampusHub. All rights reserved.
+                        </p>
+                    </div>
+                </div>`;
+
                 await transporter.sendMail({
                     from: process.env.NODEMAILER_USER,
                     to: user.email,
                     subject: 'CampusConnect Login OTP',
-                    text: `Your Login OTP is: ${otpCode}. It expires in 5 minutes.`
+                    html: emailHtml
                 });
             }
         } catch (emailErr) {
