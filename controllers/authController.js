@@ -256,7 +256,18 @@ export async function getUserById(req, res) {
     try {
         const user = await User.findById(req.params.id).select('-password');
         if (!user) return res.status(404).json({ message: "User not found" });
-        res.json(user);
+        
+        const userData = user.toObject();
+        const isSelf = req.user.id === req.params.id;
+        const isAdmin = req.user.role === 'Admin';
+        
+        if (!isSelf && !isAdmin) {
+            delete userData.email;
+            delete userData.mobileNumber;
+            delete userData.idCardNumber;
+        }
+
+        res.json(userData);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
